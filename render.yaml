@@ -1,0 +1,27 @@
+services:
+  # ── Django Backend ────────────────────────────────────────────
+  - type: web
+    name: taskflow-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r ../requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate
+    startCommand: gunicorn backend.wsgi:application
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true          # Render auto-generates a secure key
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: taskflow-db
+          property: connectionString
+      - key: FRONTEND_URL
+        value: ""                    # Fill in after deploying frontend to Vercel
+
+  # ── PostgreSQL Database ───────────────────────────────────────
+databases:
+  - name: taskflow-db
+    databaseName: taskflow
+    user: taskflow_user
