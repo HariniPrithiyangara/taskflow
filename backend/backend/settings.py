@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-_raw_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+_raw_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com')
 ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',') if h.strip()]
 
 # ---------------------------------------------------------------------------
