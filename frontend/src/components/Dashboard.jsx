@@ -572,16 +572,25 @@ const Dashboard = () => {
   const [showUserMenu, setShowUserMenu]        = useState(false);
 
   // ── Task list state
-  const [tasks, setTasks]         = useState([]);
-  const [totalCount, setTotal]    = useState(0);
+  const [tasks, setTasks]         = useState(() => {
+    const cached = localStorage.getItem('taskflow_cached_tasks');
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [totalCount, setTotal]    = useState(() => {
+    return Number(localStorage.getItem('taskflow_cached_total') || 0);
+  });
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setPage]    = useState(1);
-  const [isLoading, setLoading]   = useState(true);
+  const [isLoading, setLoading]   = useState(() => {
+    const cached = localStorage.getItem('taskflow_cached_tasks');
+    return !cached; // only show loader if no cache exists
+  });
   const [listError, setListError] = useState('');
 
   // ── Global stats (always all tasks, no filter)
-  const [stats, setStats] = useState({
-    total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0,
+  const [stats, setStats] = useState(() => {
+    const cached = localStorage.getItem('taskflow_cached_stats');
+    return cached ? JSON.parse(cached) : { total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 };
   });
 
   // ── Filters
@@ -616,6 +625,7 @@ const Dashboard = () => {
     try {
       const res = await taskService.getStats();
       setStats(res.data);
+      localStorage.setItem('taskflow_cached_stats', JSON.stringify(res.data));
     } catch {
       // Non-blocking — stats are cosmetic
     }
@@ -632,10 +642,18 @@ const Dashboard = () => {
         page,
       });
       const data = res.data;
-      setTasks(data.results ?? data);
-      setTotal(data.count ?? (data.results ? data.count : data.length));
+      const resultList = data.results ?? data;
+      setTasks(resultList);
+      const totalNum = data.count ?? (data.results ? data.count : data.length);
+      setTotal(totalNum);
       setTotalPages(data.total_pages ?? 1);
       setPage(data.current_page ?? page);
+
+      // Cache the base unfiltered view for instant loads
+      if (page === 1 && !searchQuery && filterStatus === 'All') {
+        localStorage.setItem('taskflow_cached_tasks', JSON.stringify(resultList));
+        localStorage.setItem('taskflow_cached_total', String(totalNum));
+      }
     } catch {
       setListError('Failed to load tasks. Please refresh.');
     } finally {

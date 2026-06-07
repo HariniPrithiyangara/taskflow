@@ -13,12 +13,20 @@ export const API_BASE_URL =
   (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api').trim();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('taskflow_token') || null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('taskflow_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [loading, setLoading] = useState(() => {
+    const savedToken = localStorage.getItem('taskflow_token');
+    const savedUser = localStorage.getItem('taskflow_user');
+    // If we have both token and user profile, skip the splash loader immediately
+    return !!(savedToken && !savedUser);
+  });
   const [error, setError] = useState(null);
 
-  // Restore session from stored token on mount
+  // Restore and verify session in the background
   useEffect(() => {
     if (token) {
       axios
@@ -27,11 +35,13 @@ export const AuthProvider = ({ children }) => {
         })
         .then((res) => {
           setUser(res.data);
+          localStorage.setItem('taskflow_user', JSON.stringify(res.data));
           setLoading(false);
         })
         .catch((err) => {
           console.error('Failed to restore user session', err);
           localStorage.removeItem('taskflow_token');
+          localStorage.removeItem('taskflow_user');
           setToken(null);
           setUser(null);
           setLoading(false);
@@ -51,6 +61,7 @@ export const AuthProvider = ({ children }) => {
       });
       const { token: userToken, user: userData } = res.data;
       localStorage.setItem('taskflow_token', userToken);
+      localStorage.setItem('taskflow_user', JSON.stringify(userData));
       setToken(userToken);
       setUser(userData);
       setLoading(false);
@@ -77,6 +88,7 @@ export const AuthProvider = ({ children }) => {
       });
       const { token: userToken, user: userData } = res.data;
       localStorage.setItem('taskflow_token', userToken);
+      localStorage.setItem('taskflow_user', JSON.stringify(userData));
       setToken(userToken);
       setUser(userData);
       setLoading(false);
@@ -109,6 +121,10 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout API error', err);
     } finally {
       localStorage.removeItem('taskflow_token');
+      localStorage.removeItem('taskflow_user');
+      localStorage.removeItem('taskflow_cached_tasks');
+      localStorage.removeItem('taskflow_cached_total');
+      localStorage.removeItem('taskflow_cached_stats');
       setToken(null);
       setUser(null);
       setLoading(false);
