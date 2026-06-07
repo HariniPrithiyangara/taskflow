@@ -102,27 +102,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
-    setLoading(true);
-    try {
-      if (token) {
-        await axios.post(
-          `${API_BASE_URL}/auth/logout/`,
-          {},
-          { headers: { Authorization: `Token ${token}` } }
-        );
-      }
-    } catch (err) {
-      console.error('Logout API error', err);
-    } finally {
-      localStorage.removeItem('taskflow_token');
-      localStorage.removeItem('taskflow_user');
-      localStorage.removeItem('taskflow_cached_tasks');
-      localStorage.removeItem('taskflow_cached_total');
-      localStorage.removeItem('taskflow_cached_stats');
-      setToken(null);
-      setUser(null);
-      setLoading(false);
+  const logout = () => {
+    const tokenToInvalidate = token;
+    
+    // 1. Immediately clear local storage and states
+    localStorage.removeItem('taskflow_token');
+    localStorage.removeItem('taskflow_user');
+    localStorage.removeItem('taskflow_cached_tasks');
+    localStorage.removeItem('taskflow_cached_total');
+    localStorage.removeItem('taskflow_cached_stats');
+    setToken(null);
+    setUser(null);
+    setLoading(false);
+
+    // 2. Fire backend logout in the background (no await)
+    if (tokenToInvalidate) {
+      axios.post(
+        `${API_BASE_URL}/auth/logout/`,
+        {},
+        { headers: { Authorization: `Token ${tokenToInvalidate}` } }
+      ).catch((err) => {
+        console.error('Logout API error', err);
+      });
     }
   };
 
