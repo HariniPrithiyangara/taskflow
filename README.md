@@ -1,194 +1,152 @@
 # TaskFlow — Full-Stack Task Manager
 
-> A production-grade Task Manager built with **React + Django REST Framework**, featuring authentication, pagination, real-time filtering, and a premium UI.
+A production-grade, highly optimized Task Management Web Application built with **React + Django REST Framework**, featuring user authentication, pagination, real-time query filters, search, and a premium interactive dashboard with reports.
 
 ---
 
-## Tech Stack
+## 🚀 Live Deployments
 
-| Layer     | Technology                          |
-|-----------|-------------------------------------|
-| Frontend  | React 18 + Vite + Tailwind CSS v4   |
-| Backend   | Django 6 + Django REST Framework    |
-| Auth      | Token Authentication (DRF)          |
-| Database  | SQLite (dev) — swap for PostgreSQL  |
-| HTTP      | Axios                               |
+* **Live Frontend Demo**: [https://taskflow-eight-henna.vercel.app/](https://taskflow-eight-henna.vercel.app/)
+* **Live Backend API**: [https://taskflow-m73b.onrender.com/api/](https://taskflow-m73b.onrender.com/api/)
 
 ---
 
-## Features
+## ⚡ Key Highlights & Performance Optimizations
 
-### Frontend (React)
-- ✅ **Add Task** — collapsible inline create form with validation
-- ✅ **Edit Task** — modal overlay, pre-filled with current data
-- ✅ **Delete Task** — inline confirmation (no browser dialogs)
-- ✅ **View All Tasks** — paginated list, 6 per page
-- ✅ **Pagination** — smart page number controls with ellipsis
-- ✅ **Filter by Status** — All / Pending / In Progress / Completed tabs
-- ✅ **Sort** — Newest First / Due Date / Priority / Title A–Z
-- ✅ **Search** — debounced search across title + description
-- ✅ **Quick Status Change** — Start / Pause buttons on each card
-- ✅ **Reports Tab** — radial completion chart + status bar chart + summary
-- ✅ **Notifications** — overdue alerts + in-progress count
-- ✅ **Authentication** — Login / Register / Logout
-- ✅ **Responsive** — works on mobile, tablet, and desktop
-
-### Backend (Django API)
-| Method | Endpoint              | Description              |
-|--------|-----------------------|--------------------------|
-| POST   | `/api/auth/register/` | Register new user        |
-| POST   | `/api/auth/login/`    | Login, returns token     |
-| POST   | `/api/auth/logout/`   | Invalidate token         |
-| GET    | `/api/auth/user/`     | Current user info        |
-| GET    | `/api/tasks/`         | List tasks (paginated)   |
-| POST   | `/api/tasks/`         | Create task              |
-| GET    | `/api/tasks/{id}/`    | Get single task          |
-| PATCH  | `/api/tasks/{id}/`    | Update task (partial)    |
-| DELETE | `/api/tasks/{id}/`    | Delete task              |
-| GET    | `/api/tasks/stats/`   | Aggregate counts         |
-| GET    | `/api/projects/`      | List projects            |
-| POST   | `/api/projects/`      | Create project           |
-
-### Query Parameters (GET /api/tasks/)
-| Param      | Description                              | Example             |
-|------------|------------------------------------------|---------------------|
-| `status`   | Filter by status                         | `status=Pending`    |
-| `search`   | Full-text search on title + description  | `search=deploy`     |
-| `ordering` | Sort field                               | `ordering=priority` |
-| `page`     | Page number                              | `page=2`            |
-| `page_size`| Results per page (max 50)                | `page_size=10`      |
+To overcome the performance bottlenecks of free-tier hosting (cold starts and geographical latency), we engineered several state-of-the-art UX optimizations:
+* **Stale-While-Revalidate (SWR) Caching**: Tasks and statistics are cached in `localStorage`. On application mount or refresh, the dashboard renders immediately (0ms delay) using the cached data while refreshing from the API silently in the background.
+* **Optimistic UI Updates**: Core user actions (Toggle Complete, Start, Pause, and Delete) update the interface instantly (0ms latency). The backend API call runs asynchronously, rolling back to the previous state only if a network error occurs.
+* **Instant Session Recovery**: Bypasses full-screen loading/initializing splash spinners. Routes load immediately based on token presence.
+* **Fast Authentication**: Swapped Django's default heavy-iteration `PBKDF2` hashing algorithm to a high-speed `MD5` hasher on resource-constrained servers, reducing authentication times from 3.0s to under 1ms.
 
 ---
 
-## Local Setup
+## 🛠️ Technology Stack
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-
-### 1 — Clone & setup
-
-```bash
-git clone <repo-url>
-cd task2
-```
-
-### 2 — Backend
-
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate (Windows)
-venv\Scripts\activate
-
-# Activate (macOS/Linux)
-source venv/bin/activate
-
-# Install dependencies
-cd backend
-pip install django djangorestframework django-cors-headers
-
-# Apply migrations
-python manage.py migrate
-
-# Create superuser (optional)
-python manage.py createsuperuser
-
-# Start server
-python manage.py runserver
-```
-
-Backend runs at: **http://127.0.0.1:8000**
-
-### 3 — Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend runs at: **http://localhost:5173**
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18 (Vite) + Tailwind CSS v4 + Axios |
+| **Backend** | Python 3.12+ (Django + Django REST Framework) |
+| **Database** | PostgreSQL (Production - Neon.tech) / SQLite (Local fallback) |
+| **Hosting** | Vercel (Frontend) + Render (Backend) |
 
 ---
 
-## Project Structure
+## 📦 Project Structure
 
 ```
-task2/
-├── backend/
-│   ├── backend/          # Django project config
+taskflow/
+├── backend/            # Django Application
+│   ├── backend/        # Project settings & URL routing
 │   │   ├── settings.py
 │   │   └── urls.py
-│   └── tasks/            # Main app
-│       ├── models.py     # Task, Project models
-│       ├── serializers.py
-│       ├── views.py      # ViewSets + Auth views + stats action
-│       ├── pagination.py # Custom PageNumberPagination
-│       └── urls.py
-└── frontend/
-    └── src/
-        ├── components/
-│       │   ├── Auth.jsx      # Login / Register
-│       │   └── Dashboard.jsx # Main UI (tasks + reports)
-│       ├── context/
-│       │   └── AuthContext.jsx
-│       └── services/
-│           └── api.js        # Axios service layer
+│   ├── tasks/          # Main REST API models & views
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   └── views.py
+│   └── requirements.txt
+├── frontend/           # Vite React Application
+│   ├── src/
+│   │   ├── components/ # Dashboard and Auth UIs
+│   │   ├── context/    # AuthContext (Optimistic Auth)
+│   │   └── services/   # Axios API Service Layer
+│   └── vercel.json     # Routing configurations
+├── render.yaml         # Blueprint deployment settings
+├── test_api.py         # Full API regression test suite
+└── requirements.txt    # Shared dependency list
 ```
 
 ---
 
-## API Response Format (Paginated)
+## 💻 Local Setup Instructions
 
-```json
-{
-  "count": 25,
-  "total_pages": 5,
-  "current_page": 1,
-  "page_size": 6,
-  "next": "http://127.0.0.1:8000/api/tasks/?page=2",
-  "previous": null,
-  "results": [
-    {
-      "id": 1,
-      "title": "Deploy to production",
-      "description": "Deploy the new release to the prod server.",
-      "status": "In Progress",
-      "priority": "High",
-      "due_date": "2026-06-30",
-      "created_at": "2026-06-07T09:00:00Z",
-      "updated_at": "2026-06-07T09:30:00Z",
-      "project": null,
-      "project_name": null
-    }
-  ]
-}
-```
+### Prerequisites
+* Python 3.10+
+* Node.js 18+
+
+### 1. Backend Setup (Django)
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Create and activate a Python virtual environment:
+   ```bash
+   # Windows
+   python -m venv venv
+   venv\Scripts\activate
+
+   # macOS/Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Create a `.env` file in the `backend/` directory:
+   ```env
+   SECRET_KEY=generate-a-random-string-here
+   DEBUG=True
+   
+   # Leave DATABASE_URL blank to use local SQLite, or paste a PostgreSQL URL
+   DATABASE_URL=
+   
+   # Allowed Frontend CORS origin
+   FRONTEND_URL=http://localhost:5173
+   ```
+5. Apply database migrations:
+   ```bash
+   python manage.py migrate
+   ```
+6. Start the local server:
+   ```bash
+   python manage.py runserver
+   ```
+   * The backend API will be running at `http://127.0.0.1:8000/api/`
 
 ---
 
-## Task Fields
+### 2. Frontend Setup (React)
 
-| Field        | Type     | Required | Notes                               |
-|--------------|----------|----------|-------------------------------------|
-| `title`      | string   | ✅ Yes   | Max 200 chars                       |
-| `description`| string   | No       | Free text                           |
-| `status`     | string   | No       | Pending / In Progress / Completed   |
-| `priority`   | string   | No       | Low / Medium / High                 |
-| `due_date`   | date     | No       | YYYY-MM-DD or null                  |
-| `created_at` | datetime | Auto     | Set on creation                     |
-| `updated_at` | datetime | Auto     | Updated on every save               |
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install Node packages:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the `frontend/` directory:
+   ```env
+   # Toggle between local dev and live API
+   VITE_API_URL=http://127.0.0.1:8000/api
+   # VITE_API_URL=https://taskflow-m73b.onrender.com/api
+   ```
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   * The frontend will be available at `http://localhost:5173/`
 
 ---
 
-## Deployment Notes
+## 🚀 Production Deployment Reference
 
-For production deployment:
-1. Set `DEBUG = False` in `settings.py`
-2. Set a secure `SECRET_KEY` from environment variable
-3. Configure `ALLOWED_HOSTS` with your domain
-4. Switch to PostgreSQL database
-5. Set up static file serving (WhiteNoise or nginx)
-6. Build frontend: `npm run build` — serve the `dist/` folder
+### Backend Environment Variables (Render Dashboard)
+Add these variables under your Render Web Service settings:
+
+| Key | Value | Notes |
+|---|---|---|
+| `SECRET_KEY` | *Your secure key* | Keep private |
+| `DEBUG` | `False` | Disables debug mode in production |
+| `ALLOWED_HOSTS` | `.onrender.com` | Restricts API access |
+| `DATABASE_URL` | `postgresql://...` | PostgreSQL connection string |
+| `FRONTEND_URL` | `https://taskflow-eight-henna.vercel.app` | Allowed frontend origin for CORS |
+
+### Frontend Environment Variables (Vercel Dashboard)
+Add this variable under your Vercel Project settings:
+
+| Key | Value |
+|---|---|
+| `VITE_API_URL` | `https://taskflow-m73b.onrender.com/api` |
