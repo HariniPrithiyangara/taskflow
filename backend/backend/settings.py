@@ -112,17 +112,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Speed up login hashing for low-resource hosting (Render free tier CPU)
-PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-]
-
 
 # ---------------------------------------------------------------------------
 # Internationalisation
 # ---------------------------------------------------------------------------
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

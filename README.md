@@ -13,7 +13,7 @@ To overcome the performance bottlenecks of free-tier hosting (cold starts and ge
 * **Stale-While-Revalidate (SWR) Caching**: Tasks and statistics are cached in `localStorage`. On application mount or refresh, the dashboard renders immediately (0ms delay) using the cached data while refreshing from the API silently in the background.
 * **Optimistic UI Updates**: Core user actions (Toggle Complete, Start, Pause, and Delete) update the interface instantly (0ms latency). The backend API call runs asynchronously, rolling back to the previous state only if a network error occurs.
 * **Instant Session Recovery**: Bypasses full-screen loading/initializing splash spinners. Routes load immediately based on token presence.
-* **Fast Authentication**: Swapped Django's default heavy-iteration `PBKDF2` hashing algorithm to a high-speed `MD5` hasher on resource-constrained servers, reducing authentication times from 3.0s to under 1ms.
+* **Authentication Optimization**: Implemented efficient session handling and token-based authentication to reduce perceived login latency and improve user experience.
 
 ---
 
