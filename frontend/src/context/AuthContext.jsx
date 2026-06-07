@@ -10,7 +10,7 @@ export const AuthContext = createContext(null);
  * local development if the variable is missing.
  */
 export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+  (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api').trim();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
