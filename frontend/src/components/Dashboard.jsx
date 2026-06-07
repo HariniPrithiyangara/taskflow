@@ -1187,7 +1187,7 @@ const Dashboard = () => {
               </div>
             )}
 
-            {isLoading ? (
+            {tasks.length === 0 && isLoading ? (
               <div className="flex flex-col items-center justify-center py-24">
                 <svg className="animate-spin h-8 w-8 text-indigo-500 mb-3" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -1211,7 +1211,14 @@ const Dashboard = () => {
               </div>
             ) : (
               <>
-                <div className="space-y-3">
+                {/* Visual indicator when reloading in background */}
+                {isLoading && (
+                  <div className="w-full bg-indigo-100 h-0.5 rounded-full mb-3 overflow-hidden">
+                    <div className="bg-indigo-600 h-full w-full animate-pulse"></div>
+                  </div>
+                )}
+                
+                <div className={`space-y-3 transition-opacity duration-200 ${isLoading ? 'opacity-60 pointer-events-none' : ''}`}>
                   {tasks.map((task) => (
                     <TaskCard
                       key={task.id}
