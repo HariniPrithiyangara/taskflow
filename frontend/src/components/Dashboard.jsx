@@ -621,8 +621,8 @@ const Dashboard = () => {
     }
   }, []);
 
-  const fetchTasks = useCallback(async (page = 1) => {
-    setLoading(true);
+  const fetchTasks = useCallback(async (page = 1, quiet = false) => {
+    if (!quiet) setLoading(true);
     setListError('');
     try {
       const res = await taskService.getTasks({
@@ -639,7 +639,7 @@ const Dashboard = () => {
     } catch {
       setListError('Failed to load tasks. Please refresh.');
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, [searchQuery, filterStatus, ordering]);
 
@@ -660,8 +660,8 @@ const Dashboard = () => {
 
   // ── CRUD handlers ─────────────────────────────────────────────────────────
 
-  const refreshAll = useCallback(() => {
-    fetchTasks(currentPage);
+  const refreshAll = useCallback((quiet = false) => {
+    fetchTasks(currentPage, quiet);
     fetchStats();
   }, [fetchTasks, fetchStats, currentPage]);
 
@@ -689,28 +689,144 @@ const Dashboard = () => {
   };
 
   const handleEditSave = async (id, data) => {
-    await taskService.updateTask(id, data);
-    refreshAll();
+    const originalTasks = [...tasks];
+    // Optimistically update the list
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
+    try {
+      await taskService.updateTask(id, data);
+      refreshAll(true);
+    } catch (err) {
+      setTasks(originalTasks);
+      throw err;
+    }
   };
 
   const handleDelete = async (id) => {
-    await taskService.deleteTask(id);
-    // If deleting last item on page > 1, go back a page
-    const newPage = tasks.length === 1 && currentPage > 1 ? currentPage - 1 : currentPage;
-    fetchTasks(newPage);
-    fetchStats();
+    const originalTasks = [...tasks];
+    const originalStats = { ...stats };
+    const originalTotal = totalCount;
+
+    const taskToDelete = tasks.find(t => t.id === id);
+    if (!taskToDelete) return;
+
+    // Optimistically update list and total count
+    const updatedTasks = tasks.filter(t => t.id !== id);
+    setTasks(updatedTasks);
+    setTotal(prev => Math.max(0, prev - 1));
+
+    // Optimistically update stats
+    setStats(prev => {
+      const next = { ...prev };
+      next.total = Math.max(0, next.total - 1);
+      const statusKey = taskToDelete.status === 'In Progress' ? 'in_progress' : taskToDelete.status.toLowerCase();
+      if (statusKey in next) {
+        next[statusKey] = Math.max(0, next[statusKey] - 1);
+      }
+      // Overdue check
+      const today = new Date().setHours(0, 0, 0, 0);
+      const isOverdue = taskToDelete.status !== 'Completed' && taskToDelete.due_date && parseLocalDate(taskToDelete.due_date) < today;
+      if (isOverdue) {
+        next.overdue = Math.max(0, next.overdue - 1);
+      }
+      return next;
+    });
+
+    try {
+      await taskService.deleteTask(id);
+      const newPage = updatedTasks.length === 0 && currentPage > 1 ? currentPage - 1 : currentPage;
+      fetchTasks(newPage, true);
+      fetchStats();
+    } catch (err) {
+      // Rollback
+      setTasks(originalTasks);
+      setStats(originalStats);
+      setTotal(originalTotal);
+    }
   };
 
   const handleToggleComplete = async (task) => {
-    const newStatus = task.status === 'Completed' ? 'Pending' : 'Completed';
-    await taskService.updateTask(task.id, { status: newStatus });
-    refreshAll();
+    const originalTasks = [...tasks];
+    const originalStats = { ...stats };
+
+    const oldStatus = task.status;
+    const newStatus = oldStatus === 'Completed' ? 'Pending' : 'Completed';
+
+    // Optimistically update task status in the list
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
+
+    // Optimistically update stats
+    setStats(prev => {
+      const next = { ...prev };
+      const oldKey = oldStatus === 'In Progress' ? 'in_progress' : oldStatus.toLowerCase();
+      const newKey = newStatus === 'In Progress' ? 'in_progress' : newStatus.toLowerCase();
+
+      if (oldKey in next) next[oldKey] = Math.max(0, next[oldKey] - 1);
+      if (newKey in next) next[newKey] = next[newKey] + 1;
+
+      // Overdue check
+      const today = new Date().setHours(0, 0, 0, 0);
+      const isOverdue = task.due_date && parseLocalDate(task.due_date) < today;
+      if (isOverdue) {
+        if (oldStatus !== 'Completed' && newStatus === 'Completed') {
+          next.overdue = Math.max(0, next.overdue - 1);
+        } else if (oldStatus === 'Completed' && newStatus !== 'Completed') {
+          next.overdue = next.overdue + 1;
+        }
+      }
+      return next;
+    });
+
+    try {
+      await taskService.updateTask(task.id, { status: newStatus });
+      refreshAll(true);
+    } catch (err) {
+      setTasks(originalTasks);
+      setStats(originalStats);
+    }
   };
 
   const handleSetStatus = async (id, newStatus) => {
-    await taskService.updateTask(id, { status: newStatus });
-    refreshAll();
+    const originalTasks = [...tasks];
+    const originalStats = { ...stats };
+
+    const taskToUpdate = tasks.find(t => t.id === id);
+    if (!taskToUpdate) return;
+    const oldStatus = taskToUpdate.status;
+
+    // Optimistically update task status in the list
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
+
+    // Optimistically update stats
+    setStats(prev => {
+      const next = { ...prev };
+      const oldKey = oldStatus === 'In Progress' ? 'in_progress' : oldStatus.toLowerCase();
+      const newKey = newStatus === 'In Progress' ? 'in_progress' : newStatus.toLowerCase();
+
+      if (oldKey in next) next[oldKey] = Math.max(0, next[oldKey] - 1);
+      if (newKey in next) next[newKey] = next[newKey] + 1;
+
+      // Overdue check
+      const today = new Date().setHours(0, 0, 0, 0);
+      const isOverdue = taskToUpdate.due_date && parseLocalDate(taskToUpdate.due_date) < today;
+      if (isOverdue) {
+        if (oldStatus !== 'Completed' && newStatus === 'Completed') {
+          next.overdue = Math.max(0, next.overdue - 1);
+        } else if (oldStatus === 'Completed' && newStatus !== 'Completed') {
+          next.overdue = next.overdue + 1;
+        }
+      }
+      return next;
+    });
+
+    try {
+      await taskService.updateTask(id, { status: newStatus });
+      refreshAll(true);
+    } catch (err) {
+      setTasks(originalTasks);
+      setStats(originalStats);
+    }
   };
+
 
   // Close dropdowns when clicking outside
   useEffect(() => {
