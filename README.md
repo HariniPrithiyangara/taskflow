@@ -1,13 +1,9 @@
 # TaskFlow — Full-Stack Task Manager
 
+[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-taskflow--eight--henna.vercel.app-0070f3?style=for-the-badge&logo=vercel&logoColor=white)](https://taskflow-eight-henna.vercel.app/)
+[![API Endpoint](https://img.shields.io/badge/API_ENDPOINT-taskflow--m73b.onrender.com-success?style=for-the-badge&logo=render)](https://taskflow-m73b.onrender.com/api/)
+
 A production-grade, highly optimized Task Management Web Application built with **React + Django REST Framework**, featuring user authentication, pagination, real-time query filters, search, and a premium interactive dashboard with reports.
-
----
-
-## 🚀 Live Deployments
-
-* **Live Frontend Demo**: [https://taskflow-eight-henna.vercel.app/](https://taskflow-eight-henna.vercel.app/)
-* **Live Backend API**: [https://taskflow-m73b.onrender.com/api/](https://taskflow-m73b.onrender.com/api/)
 
 ---
 
