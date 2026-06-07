@@ -18,12 +18,7 @@ export const AuthProvider = ({ children }) => {
     const saved = localStorage.getItem('taskflow_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [loading, setLoading] = useState(() => {
-    const savedToken = localStorage.getItem('taskflow_token');
-    const savedUser = localStorage.getItem('taskflow_user');
-    // If we have both token and user profile, skip the splash loader immediately
-    return !!(savedToken && !savedUser);
-  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Restore and verify session in the background
@@ -141,7 +136,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         logout,
-        isAuthenticated: !!user,
+        isAuthenticated: !!token,
       }}
     >
       {children}
